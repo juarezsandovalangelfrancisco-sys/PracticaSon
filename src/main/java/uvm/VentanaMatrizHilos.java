@@ -6,10 +6,12 @@ import java.awt.event.ActionListener;
 
 public class VentanaMatrizHilos extends JFrame {
     HiloCazador hcaz;
+   private JLabel lblContador = new JLabel("Símbolos: 0");
     HiloClima hcli;
     HiloLimpiador hlim;
     HiloRebotador hreb;
     HiloSerpiente hser;
+    private Thread hiloRebotadorThread;
 
     // Matriz de 15x15 JLabels (Recurso Compartido)
     private JLabel[][] matriz = new JLabel[15][15];
@@ -96,6 +98,7 @@ public class VentanaMatrizHilos extends JFrame {
         panelCazador.add(btIniciarC);
         panelCazador.add(btPausaC);
         panelCazador.add(btTerminarC);
+        panelCazador.add(lblContador);
 
         panelNorte.add(panelSerpiente);
         panelNorte.add(panelCazador);
@@ -268,23 +271,51 @@ public class VentanaMatrizHilos extends JFrame {
     // -----------------------------------------------------------------
     // Métodos privados para manejo de eventos (Cazador)
     // -----------------------------------------------------------------
-    private void iniciarCazador() {
-        System.out.println("Evento: Iniciar Cazador");
+
+private void iniciarCazador() {
+    if (hcaz == null || !hcaz.isAlive()) {
+        hcaz = new HiloCazador(matriz, lblContador);
+        hcaz.start();
+        btIniciarC.setEnabled(false);
+        btPausaC.setText("Pausa");
+    }
+}
+
+private void pausarCazador() {
+    if (hcaz != null && hcaz.isAlive()) {
+        btIniciarC.setText("Continuar");
+        hcaz.pausarContinuar();
+
+        if (hcaz.estaPausado()) {
+            btPausaC.setText("Continuar");
+        } else {
+            btPausaC.setText("Pausa");
+        }
+    }
+}
+
+private void terminarCazador() {
+    if (hcaz != null && hcaz.isAlive()) {
+        hcaz.terminar();
     }
 
-    private void pausarCazador() {
-        System.out.println("Evento: Pausar Cazador");
-    }
+    btIniciarC.setEnabled(true);
+    btPausaC.setText("Pausa");
+    btIniciarC.setText("Otra");
+}
 
-    private void terminarCazador() {
-        System.out.println("Evento: Terminar Cazador");
-    }
 
     // -----------------------------------------------------------------
     // Métodos privados para manejo de eventos (Rebotador)
     // -----------------------------------------------------------------
+
     private void iniciarRebotador() {
-        System.out.println("Evento: Iniciar Rebotador");
+if (hiloRebotadorThread == null || !hiloRebotadorThread.isAlive()) {
+        // CORRECCIÓN: En Java se pasan los valores directamente en orden, sin "filaInicial:" ni "colInicial:"
+        hreb = new HiloRebotador(matriz, 0, 0);
+        hiloRebotadorThread = new Thread(hreb);
+        hiloRebotadorThread.start();
+    }
     }
 
     private void pausarRebotador() {
@@ -292,7 +323,9 @@ public class VentanaMatrizHilos extends JFrame {
     }
 
     private void terminarRebotador() {
-        System.out.println("Evento: Terminar Rebotador");
+          if (hreb != null) {
+        hreb.detener();
+    }
     }
 
     // -----------------------------------------------------------------
